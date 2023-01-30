@@ -1,9 +1,11 @@
 <?php
+
 /**
  * @package dompdf
  * @link    https://github.com/dompdf/dompdf
  * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
  */
+
 namespace Dompdf\Renderer;
 
 use Dompdf\Adapter\CPDF;
@@ -72,9 +74,27 @@ class Text extends AbstractRenderer
           $text
         );*/
 
-        $this->_canvas->text($x, $y, $text,
-            $font, $size,
-            $style->color, $word_spacing, $letter_spacing);
+        if (strtolower($style->direction) == 'rtl' && !mb_detect_encoding($text, array("ASCII"))) {
+            preg_match_all('/./us', $text, $ar);
+            $text = join('', array_reverse($ar[0]));
+            // if there are numbers in the string
+            // so the next line reverse the number back
+            // treat also numbers with dot (decimal) and email
+            $text = preg_replace_callback('/\d+-\d+|\d+|\d+\.\d+|\S+@\S+/', function (array $m) {
+                return strrev($m[0]);
+            }, $text);
+        }
+
+        $this->_canvas->text(
+            $x,
+            $y,
+            $text,
+            $font,
+            $size,
+            $style->color,
+            $word_spacing,
+            $letter_spacing
+        );
 
         $line = $frame->get_containing_line();
 
